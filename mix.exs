@@ -5,7 +5,7 @@ defmodule ExFaiss.MixProject do
     [
       app: :ex_faiss,
       version: "0.1.0",
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make] ++ Mix.compilers(),
       deps: deps()
