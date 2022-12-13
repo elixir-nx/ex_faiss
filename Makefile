@@ -14,6 +14,9 @@ FAISS_DIR = $(BUILD_CACHE)/$(FAISS_NS)
 EX_FAISS_DIR = c_src/ex_faiss
 PRIV_DIR = $(MIX_APP_PATH)/priv
 EX_FAISS_SO = $(PRIV_DIR)/libex_faiss.so
+EX_FAISS_CACHE_SO = cache/libex_faiss.so
+EX_FAISS_EXTENSION_LIB = $(FAISS_DIR)/build/faiss
+EX_FAISS_LIB_DIR = $(PRIV_DIR)/lib
 
 # Build flags
 CFLAGS = -I$(ERTS_INCLUDE_DIR) -I$(FAISS_DIR) -fPIC -O3 -shared -std=c++14
@@ -30,15 +33,26 @@ C_SRCS = c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/nif_util.
 					$(EX_FAISS_DIR)/index.cc $(EX_FAISS_DIR)/index.h $(EX_FAISS_DIR)/clustering.cc \
 					$(EX_FAISS_DIR)/clustering.h
 
-LDFLAGS = -L$(PRIV_DIR)/faiss -lfaiss
+LDFLAGS = -L$(EX_FAISS_EXTENSION_LIB) -lfaiss
 
 ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
 endif
 
-$(EX_FAISS_SO): faiss $(C_SRCS)
-	ln -sf $(FAISS_DIR)/build/faiss $(PRIV_DIR)/faiss
-	$(CXX) $(CFLAGS) c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/index.cc $(EX_FAISS_DIR)/clustering.cc -o $(EX_FAISS_SO) $(LDFLAGS)
+$(EX_FAISS_SO): $(EX_FAISS_CACHE_SO)
+	@ mkdir -p $(PRIV_DIR)
+	@ if [ "${MIX_BUILD_EMBEDDED}" = "true" ]; then \
+		cp -a $(abspath $(EX_FAISS_EXTENSION_LIB)) $(EX_FAISS_LIB_DIR) ; \
+		cp -a $(abspath $(EX_FAISS_CACHE_SO)) $(EX_FAISS_SO) ; \
+	else \
+		ln -sf $(abspath $(EX_FAISS_EXTENSION_LIB)) $(EX_FAISS_LIB_DIR) ; \
+		ln -sf $(abspath $(EX_FAISS_CACHE_SO)) $(EX_FAISS_SO) ; \
+	fi
+
+$(EX_FAISS_CACHE_SO): faiss $(C_SRCS)
+	@mkdir -p cache
+	$(CXX) $(CFLAGS) c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/index.cc \
+		$(EX_FAISS_DIR)/clustering.cc -o $(EX_FAISS_CACHE_SO) $(LDFLAGS)
 	$(POST_INSTALL)
 
 ifeq ($(shell test ! -d $(FAISS_DIR) && echo 1 || echo 0), 1)
@@ -58,5 +72,6 @@ faiss:
 endif
 
 clean:
+	rm -rf $(EX_FAISS_CACHE_SO)
 	rm -rf $(FAISS_DIR)
 	rm -rf $(EX_FAISS_SO)
