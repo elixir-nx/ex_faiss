@@ -20,7 +20,7 @@ ExFaiss will download, build, and cache Faiss on the first compilation. You must
 
 ### GPU Installation
 
-If you have an NVIDIA GPU with CUDA installed, you can enable the GPU build by setting the environment variable `USE_CUDA=true`. Note that if you have already built Faiss without GPU support, you will need to delete the cached build before continuuing. You can clean the existing installation by running `make clean`.
+If you have an NVIDIA GPU with CUDA installed, you can enable the GPU build by setting the environment variable `USE_CUDA=true`. Note that if you have already built Faiss without GPU support, you will need to delete the cached build before continuing. You can clean the existing installation by running `make clean`.
 
 ## Working with Indices
 
