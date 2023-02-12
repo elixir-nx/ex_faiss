@@ -1,6 +1,5 @@
-# Ignore so in priv
-/priv/libex_faiss.so
-/priv/faiss
+# Ignore cache artifacts
+/cache/
 
 # The directory Mix will write compiled artifacts to.
 /_build/

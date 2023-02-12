@@ -3,19 +3,19 @@
 # MIX_APP_PATH
 
 TEMP ?= $(HOME)/.cache
-BUILD_CACHE ?= $(TEMP)/ex_faiss
-
+FAISS_CACHE ?= $(TEMP)/ex_faiss
 FAISS_GIT_REPO ?= https://www.github.com/facebookresearch/faiss
 FAISS_GIT_REV ?= 19f7696deedc93615c3ee0ff4de22284b53e0243
 FAISS_NS = faiss-$(FAISS_GIT_REV)
-FAISS_DIR = $(BUILD_CACHE)/$(FAISS_NS)
+FAISS_DIR = $(FAISS_CACHE)/$(FAISS_NS)
+FAISS_LIB_DIR = $(FAISS_DIR)/build/faiss
 
 # Private configuration
-EX_FAISS_DIR = c_src/ex_faiss
 PRIV_DIR = $(MIX_APP_PATH)/priv
-EX_FAISS_SO = $(PRIV_DIR)/libex_faiss.so
+EX_FAISS_DIR = c_src/ex_faiss
 EX_FAISS_CACHE_SO = cache/libex_faiss.so
-EX_FAISS_EXTENSION_LIB = $(FAISS_DIR)/build/faiss
+EX_FAISS_CACHE_LIB_DIR = cache/lib
+EX_FAISS_SO = $(PRIV_DIR)/libex_faiss.so
 EX_FAISS_LIB_DIR = $(PRIV_DIR)/lib
 
 # Build flags
@@ -33,30 +33,38 @@ C_SRCS = c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/nif_util.
 					$(EX_FAISS_DIR)/index.cc $(EX_FAISS_DIR)/index.h $(EX_FAISS_DIR)/clustering.cc \
 					$(EX_FAISS_DIR)/clustering.h
 
-LDFLAGS = -L$(EX_FAISS_EXTENSION_LIB) -lfaiss
+LDFLAGS = -L$(EX_FAISS_CACHE_LIB_DIR) -lfaiss
 
 ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
+	POST_INSTALL = install_name_tool $(EX_FAISS_CACHE_SO) -change @rpath/libfaiss.dylib @loader_path/lib/libfaiss.dylib
+else
+	# Use a relative RPATH, so at runtime libexla.so looks for libxla_extension.so
+	# in ./lib regardless of the absolute location. This way priv can be safely
+	# packed into an Elixir release. Also, we use $$ to escape Makefile variable
+	# and single quotes to escape shell variable
+	LDFLAGS += -Wl,-rpath,'$$ORIGIN/lib'
+	POST_INSTALL = $(NOOP)
 endif
 
 $(EX_FAISS_SO): $(EX_FAISS_CACHE_SO)
 	@ mkdir -p $(PRIV_DIR)
 	@ if [ "${MIX_BUILD_EMBEDDED}" = "true" ]; then \
-		cp -a $(abspath $(EX_FAISS_EXTENSION_LIB)) $(EX_FAISS_LIB_DIR) ; \
+		cp -a $(abspath $(EX_FAISS_CACHE_LIB_DIR)) $(EX_FAISS_LIB_DIR) ; \
 		cp -a $(abspath $(EX_FAISS_CACHE_SO)) $(EX_FAISS_SO) ; \
 	else \
-		ln -sf $(abspath $(EX_FAISS_EXTENSION_LIB)) $(EX_FAISS_LIB_DIR) ; \
+		ln -sf $(abspath $(EX_FAISS_CACHE_LIB_DIR)) $(EX_FAISS_LIB_DIR) ; \
 		ln -sf $(abspath $(EX_FAISS_CACHE_SO)) $(EX_FAISS_SO) ; \
 	fi
 
-$(EX_FAISS_CACHE_SO): faiss $(C_SRCS)
+$(EX_FAISS_CACHE_SO): $(FAISS_LIB_DIR) $(C_SRCS)
 	@mkdir -p cache
+	cp -a $(FAISS_LIB_DIR) $(EX_FAISS_CACHE_LIB_DIR)
 	$(CXX) $(CFLAGS) c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/index.cc \
 		$(EX_FAISS_DIR)/clustering.cc -o $(EX_FAISS_CACHE_SO) $(LDFLAGS)
 	$(POST_INSTALL)
 
-ifeq ($(shell test ! -d $(FAISS_DIR) && echo 1 || echo 0), 1)
-faiss:
+$(FAISS_LIB_DIR):
 		rm -rf $(FAISS_DIR) && \
 		mkdir -p $(FAISS_DIR) && \
 			cd $(FAISS_DIR) && \
@@ -66,12 +74,10 @@ faiss:
 			git checkout FETCH_HEAD && \
 			cmake -B build . $(CMAKE_FLAGS) && \
 			make -C build -j faiss
-else
-faiss:
-	@echo "Using cached faiss build..."
-endif
 
 clean:
 	rm -rf $(EX_FAISS_CACHE_SO)
-	rm -rf $(FAISS_DIR)
+	rm -rf $(EX_FAISS_CACHE_LIB_DIR)
 	rm -rf $(EX_FAISS_SO)
+	rm -rf $(EX_FAISS_LIB_DIR)
+	rm -rf $(FAISS_DIR)
