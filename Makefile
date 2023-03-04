@@ -39,7 +39,7 @@ ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
 	POST_INSTALL = install_name_tool $(EX_FAISS_CACHE_SO) -change @rpath/libfaiss.dylib @loader_path/lib/libfaiss.dylib
 else
-	# Use a relative RPATH, so at runtime libexla.so looks for libxla_extension.so
+	# Use a relative RPATH, so at runtime libex_faiss.so looks for libfaiss.so
 	# in ./lib regardless of the absolute location. This way priv can be safely
 	# packed into an Elixir release. Also, we use $$ to escape Makefile variable
 	# and single quotes to escape shell variable
