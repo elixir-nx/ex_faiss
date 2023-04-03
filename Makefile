@@ -40,9 +40,8 @@ ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
 	POST_INSTALL = install_name_tool $(EX_FAISS_CACHE_SO) -change @rpath/libfaiss.dylib @loader_path/lib/libfaiss.dylib
 
-  ifeq ($(USE_LLVM_BREW), true)
+	ifeq ($(USE_LLVM_BREW), true)
 		LLVM_PREFIX=$(shell brew --prefix llvm)
-
 		CMAKE_FLAGS += -DCMAKE_CXX_COMPILER=$(LLVM_PREFIX)/bin/clang++
 	endif
 else
@@ -79,7 +78,7 @@ $(FAISS_LIB_DIR_FLAG):
 			git remote add origin $(FAISS_GIT_REPO) && \
 			git fetch --depth 1 origin $(FAISS_GIT_REV) && \
 			git checkout FETCH_HEAD && \
-		  cmake -B build . $(CMAKE_FLAGS) && \
+			cmake -B build . $(CMAKE_FLAGS) && \
 			make -C build -j faiss
 		touch $(FAISS_LIB_DIR_FLAG)
 
