@@ -9,6 +9,7 @@ FAISS_GIT_REV ?= 19f7696deedc93615c3ee0ff4de22284b53e0243
 FAISS_NS = faiss-$(FAISS_GIT_REV)
 FAISS_DIR = $(FAISS_CACHE)/$(FAISS_NS)
 FAISS_LIB_DIR = $(FAISS_DIR)/build/faiss
+FAISS_LIB_DIR_FLAG = $(FAISS_DIR)/build/faiss/ex_faiss.ok
 
 # Private configuration
 PRIV_DIR = $(MIX_APP_PATH)/priv
@@ -57,14 +58,14 @@ $(EX_FAISS_SO): $(EX_FAISS_CACHE_SO)
 		ln -sf $(abspath $(EX_FAISS_CACHE_SO)) $(EX_FAISS_SO) ; \
 	fi
 
-$(EX_FAISS_CACHE_SO): $(FAISS_LIB_DIR) $(C_SRCS)
+$(EX_FAISS_CACHE_SO): $(FAISS_LIB_DIR_FLAG) $(C_SRCS)
 	@mkdir -p cache
 	cp -a $(FAISS_LIB_DIR) $(EX_FAISS_CACHE_LIB_DIR)
 	$(CXX) $(CFLAGS) c_src/ex_faiss.cc $(EX_FAISS_DIR)/nif_util.cc $(EX_FAISS_DIR)/index.cc \
 		$(EX_FAISS_DIR)/clustering.cc -o $(EX_FAISS_CACHE_SO) $(LDFLAGS)
 	$(POST_INSTALL)
 
-$(FAISS_LIB_DIR):
+$(FAISS_LIB_DIR_FLAG):
 		rm -rf $(FAISS_DIR) && \
 		mkdir -p $(FAISS_DIR) && \
 			cd $(FAISS_DIR) && \
@@ -74,6 +75,7 @@ $(FAISS_LIB_DIR):
 			git checkout FETCH_HEAD && \
 			cmake -B build . $(CMAKE_FLAGS) && \
 			make -C build -j faiss
+		touch $(FAISS_LIB_DIR_FLAG)
 
 clean:
 	rm -rf $(EX_FAISS_CACHE_SO)
