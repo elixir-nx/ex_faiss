@@ -18,8 +18,9 @@ end
 
 ExFaiss will download, build, and cache Faiss on the first compilation. You must have CMake installed in order to build Faiss.
 
-### MacOS Compilation
-For some reason Faiss requires OpenMP to build and the built in Apple LLVM Clang compilers do not include it. So if you have troubles building using a mac you will need to install LLVM from homebrew.
+### macOS Compilation
+
+If you have troubles building on a macOS, you can try installing LLVM from homebrew.
 
 ```shell
 $ brew install llvm cmake
