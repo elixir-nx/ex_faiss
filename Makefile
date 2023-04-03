@@ -40,8 +40,11 @@ ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
 	POST_INSTALL = install_name_tool $(EX_FAISS_CACHE_SO) -change @rpath/libfaiss.dylib @loader_path/lib/libfaiss.dylib
 
-	LLVM_PREFIX=$(shell brew --prefix llvm)
-	CMAKE_FLAGS += -DCMAKE_CXX_COMPILER=$(LLVM_PREFIX)/bin/clang++
+  ifeq ($(USE_BREW_LLVM), true)
+		LLVM_PREFIX=$(shell brew --prefix llvm)
+
+		CMAKE_FLAGS += -DCMAKE_CXX_COMPILER=$(LLVM_PREFIX)/bin/clang++
+	endif
 else
 	# Use a relative RPATH, so at runtime libex_faiss.so looks for libfaiss.so
 	# in ./lib regardless of the absolute location. This way priv can be safely
@@ -49,7 +52,7 @@ else
 	# and single quotes to escape shell variable
 	LDFLAGS += -Wl,-rpath,'$$ORIGIN/lib'
 	POST_INSTALL = $(NOOP)
-endif
+endif
 
 $(EX_FAISS_SO): $(EX_FAISS_CACHE_SO)
 	@ mkdir -p $(PRIV_DIR)
@@ -76,7 +79,7 @@ $(FAISS_LIB_DIR_FLAG):
 			git remote add origin $(FAISS_GIT_REPO) && \
 			git fetch --depth 1 origin $(FAISS_GIT_REV) && \
 			git checkout FETCH_HEAD && \
-			cmake -B build . $(CMAKE_FLAGS) && \
+		  cmake -B build . $(CMAKE_FLAGS) && \
 			make -C build -j faiss
 		touch $(FAISS_LIB_DIR_FLAG)
 

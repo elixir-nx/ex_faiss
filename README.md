@@ -19,11 +19,16 @@ end
 ExFaiss will download, build, and cache Faiss on the first compilation. You must have CMake installed in order to build Faiss.
 
 ### MacOS Compilation
-For some reason ExFaiss doesn't want to build using the Apple LLVM so to make this work you will first need to install LLVM via [Homebrew](https://brew.sh/):
+For some reason Faiss requires OpenMP to build and the built in Apple LLVM Clang compilers so not include it. So if you want to build using a mac you will need to install LLVM from homebrew.
 
 ```shell
+ 
 $ brew install llvm
 ```
+
+And tell ExFaiss to use it by setting the environment variable `USE_BREW_LLVM=true`. 
+
+If you attempted to build once already and it failed you will need cd into the `ex_faiss` dir directly via `cd deps/ex_faise` and run `make clean`. Or `mix deps.clean ex_faiss && rm -rf ~/.cache/ex_faiss`
 
 ### GPU Installation
 
