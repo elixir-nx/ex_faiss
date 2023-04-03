@@ -40,7 +40,7 @@ ifeq ($(shell uname -s), Darwin)
 	LDFLAGS += -flat_namespace -undefined suppress
 	POST_INSTALL = install_name_tool $(EX_FAISS_CACHE_SO) -change @rpath/libfaiss.dylib @loader_path/lib/libfaiss.dylib
 
-  ifeq ($(USE_BREW_LLVM), true)
+  ifeq ($(USE_LLVM_BREW), true)
 		LLVM_PREFIX=$(shell brew --prefix llvm)
 
 		CMAKE_FLAGS += -DCMAKE_CXX_COMPILER=$(LLVM_PREFIX)/bin/clang++
