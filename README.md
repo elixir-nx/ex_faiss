@@ -1,5 +1,7 @@
 # ExFaiss
 
+> Note: this library is experimental and not a priority. Consider using [HNSWLib](https://github.com/elixir-nx/hnswlib) instead.
+
 Elixir front-end for [Facebook AI Similarity Search (Faiss)](https://github.com/facebookresearch/faiss).
 
 ExFaiss is a low-level wrapper around Faiss which allows you to create and manage Faiss indices and clusterings. Faiss enables efficient search and clustering of dense vectors and has the potential to scale to millions, billions, and even trillions of vectors. ExFaiss works directly with [Nx](https://github.com/elixir-nx/nx) tensors, so you can seamlessly integrate ExFaiss into your existing Elixir ML workflows.
